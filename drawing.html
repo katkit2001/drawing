@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Drawing(p5.js)</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.min.js"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      overflow: hidden; background: #A63D40; font-family: sans-serif;
+    }
+
+    /* p5.js canvas */
+    #defaultCanvas0 {
+      position: absolute; top: 0; left: 0; z-index: 1;
+    }
+
+    /* Intro modal */
+    .modal-wrap {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; justify-content: center; align-items: center;
+      background: rgba(0,0,0,0.5); z-index: 9999;
+    }
+    .modal {
+      background: #f3f3f3; padding: 1em 2em;
+      box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30),
+                  0 15px 12px rgba(0, 0, 0, 0.22);
+      border-radius: 2px;
+    }
+    .modal-title {
+      margin: 0.5em 0; font-weight: 300;
+    }
+    .modal-button {
+      cursor: pointer; margin: 1em 0; align-self: center;
+      padding: 0.3em 0.8em; text-transform: uppercase;
+      font-weight: 300; transition-duration: 80ms;
+      background: none; border: 1px solid #A63D40; color: #A63D40;
+    }
+    .modal-button:hover {
+      color: #f3f3f3; background: #A63D40;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5em 2em; background: rgba(0, 0, 0, 0.2); z-index: 10;
+    }
+    .navbar-title {
+      color: #fff; font-size: 1.2em; font-weight: bold;
+    }
+    .navbar-menu {
+      display: flex; gap: 0.5em;
+    }
+    .navbar-item {
+      cursor: pointer; padding: 0.3em 0.6em; color: #fff;
+      border: 1px solid #fff; border-radius: 3px;
+      background-color: transparent; transition: background-color 0.2s;
+    }
+    .navbar-item:hover {
+      background-color: #fff; color: #A63D40;
+    }
+    .navbar-item.active {
+      background-color: #fff; color: #A63D40;
+    }
+
+    /* Left sidebar for tools */
+    .sidebar {
+      position: fixed; top: 3em; left: 0; width: 8em;
+      background: rgba(0, 0, 0, 0.1); padding: 1em;
+      display: flex; flex-direction: column; gap: 0.5em; z-index: 10;
+    }
+    .sidebar-title {
+      color: #fff; margin: 0 0 0.5em 0; font-weight: 400;
+    }
+    .sidebar-item {
+      cursor: pointer; padding: 0.3em 0.6em; color: #fff;
+      border: 1px solid #fff; border-radius: 3px;
+      background-color: transparent; transition: background-color 0.2s;
+      text-align: center;
+    }
+    .sidebar-item:hover {
+      background-color: #fff; color: #A63D40;
+    }
+    .sidebar-item.active {
+      background-color: #fff; color: #A63D40;
+    }
+
+    /* Color squares */
+    .sidebar-item-colors {
+      display: flex; flex-wrap: wrap; gap: 5px; margin-top: 0.5em;
+    }
+    .sidebar-item-colors > span {
+      display: inline-block; width: 20px; height: 20px;
+      border: 1px solid #fff; cursor: pointer;
+    }
+
+    /* Color backgrounds */
+    #color-dark   { background: #333333; }
+    #color-grey   { background: #888888; }
+    #color-white  { background: #ffffff; }
+    #color-blue   { background: #0000ff; }
+    #color-red    { background: #ff0000; }
+    #color-pink   { background: #ff69b4; }
+    #color-lime   { background: #00ff00; }
+    #color-yellow { background: #ffff00; }
+    #color-orange { background: #ffa500; }
+  </style>
+</head>
+<body>
+<div class="modal-wrap" id="modal-wrap">
+  <div class="modal">
+    <h2 class="modal-title">Γεια σου</h2>
+    <p>Στα <b>αριστερά</b> βρίσκονται τα <b>εργαλεία</b></p>
+    <p>Στην <b>κορυφή</b> υπάρχουν τα κουμπιά για <b>Clear</b>, <b>Undo</b> και <b>Export PNG</b></p>
+    <p>Πάτησε <b>Draw</b> για να σχεδιάσεις.</p>
+    <button class="modal-button" onclick="closeModal();">Κλείσιμο</button>
+    <small>
+      Δες το project στο <a href="https://github.com/katkit2001">GitHub</a> - Φτιαγμένο από τον/την <b>katkit2001(Katerina Stantsev)</b>
+    </small>
+  </div>
+</div>
+<div class="navbar">
+  <div class="navbar-title">Simple Drawing (p5.js)</div>
+  <div class="navbar-menu">
+    <p class="navbar-item" id="clear-canvas">Clear</p>
+    <p class="navbar-item" id="undo">Undo</p>
+    <p class="navbar-item" id="export-png">Export PNG</p>
+  </div>
+</div>
+<div class="sidebar">
+  <p class="sidebar-title">Εργαλεία</p>
+  <p class="sidebar-item active" id="switch-draw">Draw</p>
+  <p class="sidebar-item" id="switch-color">Color</p>
+  <div class="sidebar-item-colors">
+    <span id="color-dark"></span>
+    <span id="color-grey"></span>
+    <span id="color-white"></span>
+    <span id="color-blue"></span>
+    <span id="color-red"></span>
+    <span id="color-pink"></span>
+    <span id="color-lime"></span>
+    <span id="color-yellow"></span>
+    <span id="color-orange"></span>
+  </div>
+</div>
+<script>
+  function closeModal() {
+    document.getElementById('modal-wrap').style.display = 'none';
+  }
+
+  let currentTool = 'draw';
+  let currentColor = '#000000';
+  let bgColor = '#A63D40';
+  let strokeWidth = 4;
+  let isDrawing = false;
+  let paths = [];
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    background(bgColor);
+    setupUI();
+  }
+
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+    background(bgColor);
+    if (paths.length > 0) {
+      image(paths[paths.length - 1], 0, 0);
+    }
+  }
+
+  function mouseDragged() {
+    if (!isDrawing) return;
+    if (currentTool === 'draw') {
+      stroke(currentColor);
+      strokeWeight(strokeWidth);
+      line(pmouseX, pmouseY, mouseX, mouseY);
+    }
+  }
+
+  function mousePressed() {
+    if (currentTool === 'draw') {
+      isDrawing = true;
+    }
+  }
+
+  function mouseReleased() {
+    if (isDrawing) {
+      isDrawing = false;
+      saveState();
+    }
+  }
+
+  function saveState() {
+    const snapshot = get();
+    paths.push(snapshot);
+  }
+
+  function undo() {
+    if (paths.length > 0) {
+      paths.pop();
+    }
+    background(bgColor);
+    if (paths.length > 0) {
+      image(paths[paths.length - 1], 0, 0);
+    }
+  }
+
+  function exportPNG() {
+    saveCanvas('drawing', 'png');
+  }
+
+  function setupUI() {
+    document.getElementById('switch-draw').addEventListener('click', () => {
+      currentTool = 'draw';
+      document.getElementById('switch-draw').classList.add('active');
+      document.getElementById('switch-color').classList.remove('active');
+    });
+
+    document.getElementById('switch-color').addEventListener('click', () => {
+      currentTool = 'color';
+      document.getElementById('switch-color').classList.add('active');
+      document.getElementById('switch-draw').classList.remove('active');
+    });
+
+    document.getElementById('color-dark').addEventListener('click', () => setColor('#333333'));
+    document.getElementById('color-grey').addEventListener('click', () => setColor('#888888'));
+    document.getElementById('color-white').addEventListener('click', () => setColor('#ffffff'));
+    document.getElementById('color-blue').addEventListener('click', () => setColor('#0000ff'));
+    document.getElementById('color-red').addEventListener('click', () => setColor('#ff0000'));
+    document.getElementById('color-pink').addEventListener('click', () => setColor('#ff69b4'));
+    document.getElementById('color-lime').addEventListener('click', () => setColor('#00ff00'));
+    document.getElementById('color-yellow').addEventListener('click', () => setColor('#ffff00'));
+    document.getElementById('color-orange').addEventListener('click', () => setColor('#ffa500'));
+
+    document.getElementById('clear-canvas').addEventListener('click', () => {
+      background(bgColor);
+      paths = [];
+    });
+
+    document.getElementById('undo').addEventListener('click', undo);
+    document.getElementById('export-png').addEventListener('click', exportPNG);
+  }
+
+  function setColor(col) {
+    currentColor = col;
+  }
+</script>
+</body>
+</html>
